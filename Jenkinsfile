@@ -6,6 +6,7 @@ pipeline {
         DOCKER_REGISTRY_CREDENTIALS = credentials('bhavatharinione') // Replace with your Docker credentials ID
         DOCKER_IMAGE_NAME = "prodoneee" // Use straight double quotes
         DOCKER_IMAGE_TAG = "latest" // You can customize the image tag
+        KUBE_PATH = "/usr/local/bin" // Add the path to kubectl
     }
 
     stages {
@@ -36,19 +37,33 @@ pipeline {
             }
         }
 
+        stage('Deploy to Kubernetes') {
+            steps {
+                
+                    script {
+                        // Add /usr/local/bin to the PATH for kubectl
+                        def updatedPath = "$KUBE_PATH:$PATH"
+                        sh "export PATH=$updatedPath"
+                        
+                        // Now you can use kubectl with the updated PATH
+                        sh "kubectl apply -f deployment.yaml"
+                    }
+                
+            }
+        }
+
         // Add more stages as needed
     }
 
     post {
         success {
-            echo 'Maven build and Docker image push succeeded!'
+            echo 'Maven build, Docker image push, and Kubernetes deployment succeeded!'
             // Add post-build actions
         }
 
         failure {
-            echo 'Maven build or Docker image push failed!'
+            echo 'Maven build, Docker image push, or Kubernetes deployment failed!'
             // Add failure handling or notifications
         }
     }
 }
-
